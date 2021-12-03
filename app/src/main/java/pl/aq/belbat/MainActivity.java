@@ -14,14 +14,17 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,7 +33,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ServiceCallbacks {
+
+    private ForegroundService foregroundService;
+    private boolean bound = false;
 
     public static final String LEVEL_LBL = "Battery level: ";
     public static final String STATUS_LBL = "Battery status: ";
@@ -63,6 +69,39 @@ public class MainActivity extends AppCompatActivity {
     private boolean serviceStarted = false;
 
     private String tmpAddress = "8C:AA:B5:86:22:62";
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        //Intent intent = new Intent(this, ForegroundService.class);
+       // bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+
+    }
+
+    /** Callbacks for service binding, passed to bindService() */
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // cast the IBinder and get MyService instance
+            ForegroundService.LocalBinder binder = (ForegroundService.LocalBinder) service;
+            foregroundService = binder.getService();
+            bound = true;
+            foregroundService.setCallbacks(MainActivity.this); // register
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            bound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,9 +150,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
     public void onConnectClick(View view) {
         String mac = macAddress.getText().toString();
         if(!serviceStarted) {
@@ -127,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                         if (device.getAddress().equals(macAddress)) {
                             startService(device.getAddress());
                             serviceStarted = true;
-                            connectBtn.setText("Connect");
+                            connectBtn.setText("Disconnect");
                         }
                     }
                 }
@@ -135,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             stopService();
             serviceStarted = false;
+            connectBtn.setText("Connect");
         }
     }
 
@@ -155,16 +192,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startService(String bluetoothMac) {
+        connStatus.setText("Connecting...");
+
         Intent serviceIntent = new Intent(this, ForegroundService.class);
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
         serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
         serviceIntent.putExtra(MAC_ADDR_PARAM, bluetoothMac);
 
-        Context context = getBaseContext(); //getApplicationContext();
+        Context context = getBaseContext();
         context.startForegroundService(serviceIntent);
     }
+
+
     public void stopService() {
         Intent serviceIntent = new Intent(this, ForegroundService.class);
         stopService(serviceIntent);
+
+        if (bound) {
+            foregroundService.setCallbacks(null); // unregister
+            unbindService(serviceConnection);
+            bound = false;
+        }
+
+        connStatus.setText("Service disconnected");
     }
 
 
@@ -240,5 +291,25 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
+    }
+
+    @Override
+    public void updateStatus(String status) {
+        connStatus.setText(status);
+    }
+
+    @Override
+    public void updateConnectionStatus(boolean connectionState) {
+
+    }
+
+    @Override
+    public int getSelectedChargeLevel() {
+        try {
+            return Integer.parseInt(maxCharge.getText().toString());
+        } catch (NumberFormatException e) {
+            //ignore
+        }
+        return 0;
     }
 }

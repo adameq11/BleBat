@@ -17,6 +17,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -37,7 +38,7 @@ public class ForegroundService extends Service {
     private BluetoothGatt bluetoothGatt;
 
     private String mac;
-    private int requiredBatteryLevel = 74;
+    private int requiredBatteryLevel = 83;
 
     private boolean chargingStatus = true;
     private static final String CHARGE_MESSAGE = "C";
@@ -45,6 +46,21 @@ public class ForegroundService extends Service {
 
     private IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 
+    private final IBinder binder = new LocalBinder();
+    private ServiceCallbacks serviceCallbacks;
+
+    private boolean debug = false;
+
+    // Class used for the client Binder.
+    public class LocalBinder extends Binder {
+        ForegroundService getService() {
+            return ForegroundService.this;
+        }
+    }
+
+    public void setCallbacks(ServiceCallbacks callbacks) {
+        serviceCallbacks = callbacks;
+    }
 
     @Override
     public void onCreate() {
@@ -81,7 +97,7 @@ public class ForegroundService extends Service {
         BluetoothDevice device = btAdapter.getRemoteDevice(mac);
         bluetoothGatt = device.connectGatt(this, false, btleGattCallback);
 
-        timerHandler.postDelayed(timerRunnable, 5000);
+        timerHandler.postDelayed(timerRunnable, 10000);
 
         //stopSelf();
         return START_STICKY;
@@ -96,7 +112,7 @@ public class ForegroundService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
     private void createNotificationChannel() {
@@ -120,33 +136,35 @@ public class ForegroundService extends Service {
         public void run() {
             activity();
 
-            timerHandler.postDelayed(this, 3000);
+            timerHandler.postDelayed(this, debug ? 3000 : 60000);
         }
     };
 
     private void activity() {
 
-
+        int reqBat = serviceCallbacks != null ? serviceCallbacks.getSelectedChargeLevel() : requiredBatteryLevel;
         int batLevel = getCurrentBatteryLevel();
         System.out.println("current bat level " + batLevel + " charging status " + chargingStatus);
-        if(!chargingStatus && batLevel <= (requiredBatteryLevel - 2)) {
+        if(!chargingStatus && batLevel <= (reqBat - 2)) {
             if(transferStringToArduinoService(CHARGE_MESSAGE)) {
                 chargingStatus = true;
                 System.out.println("++++ would send "+CHARGE_MESSAGE);
             }
-        } else if(chargingStatus && batLevel > requiredBatteryLevel) {
+        } else if(chargingStatus && batLevel > reqBat) {
             if(transferStringToArduinoService(DISCHARGE_MESSAGE)) {
                 chargingStatus = false;
                 System.out.println("++++ would send "+DISCHARGE_MESSAGE);
             }
         }
 
-        /*if(count % 2 == 0) {
-            transferStringToArduinoService("5");
-        } else {
-            transferStringToArduinoService("6");
+        if(debug) {
+            if (count % 2 == 0) {
+                transferStringToArduinoService("" + reqBat);
+            } else {
+                transferStringToArduinoService("6");
+            }
+            count++;
         }
-        count++;*/
     }
 
     public boolean transferStringToArduinoService(String value) {
@@ -184,15 +202,20 @@ public class ForegroundService extends Service {
             // this will get called when a device connects or disconnects
             System.out.println("=== newState " + newState);
             switch (newState) {
-                case 0:
-                    deviceConnected = false;
-                    break;
                 case 2:
                     deviceConnected = true;
                     bluetoothGatt.discoverServices();
+                    if(serviceCallbacks != null) {
+                        serviceCallbacks.updateStatus("Connected");
+                        serviceCallbacks.updateConnectionStatus(false);
+                    }
                     break;
                 default:
                     deviceConnected = false;
+                    if(serviceCallbacks != null) {
+                        serviceCallbacks.updateStatus("BLE connection Problem");
+                        serviceCallbacks.updateConnectionStatus(false);
+                    }
                     break;
             }
         }
