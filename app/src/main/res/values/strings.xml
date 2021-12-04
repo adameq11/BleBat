@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">BleBat</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connect">Connect</string>
+    <string name="scanning_started">Scanning started...</string>
+    <string name="connecting">Connecting...</string>
+    <string name="service_disconnected">Service disconnected</string>
+    <string name="scan_failed_code">Scanning failed: %1$d</string>
+    <string name="scanning_stopped">Scanning stopped.</string>
+    <string name="bat_level">Battery level: %1$d</string>
+    <string name="bat_status">Battery status: %1$s</string>
+    <string name="limit_title">Functionality limited</string>
+    <string name="limit_text">Since location access has not been granted, this app will not be able to discover Bluetooth devices.</string>
+    <string name="connected">Connected</string>
+    <string name="conn_problem">BLE connection Problem %1$d</string>
 </resources>

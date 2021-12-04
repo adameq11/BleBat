@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
@@ -17,7 +18,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BleBat">
         <service
-            android:name=".ForegroundService"
+            android:name=".BluetoothFGService"
             android:enabled="true"
             android:exported="true"
             android:stopWithTask="false"

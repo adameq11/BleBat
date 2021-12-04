@@ -12,8 +12,6 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -24,7 +22,7 @@ import android.os.IBinder;
 
 import java.util.UUID;
 
-public class ForegroundService extends Service {
+public class BluetoothFGService extends Service {
 
     public static final String SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
     public static final String RX_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
@@ -33,40 +31,38 @@ public class ForegroundService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
     private boolean deviceConnected = false;
 
-    private BluetoothManager btManager;
     private BluetoothAdapter btAdapter;
     private BluetoothGatt bluetoothGatt;
 
-    private String mac;
     private int requiredBatteryLevel = 83;
 
     private boolean chargingStatus = true;
     private static final String CHARGE_MESSAGE = "C";
     private static final String DISCHARGE_MESSAGE = "D";
 
-    private IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    private final IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 
     private final IBinder binder = new LocalBinder();
-    private ServiceCallbacks serviceCallbacks;
+    private BluetoothFGServiceCallbacks bluetoothFGServiceCallbacks;
 
-    private boolean debug = false;
+    private final boolean debug = false;
 
     // Class used for the client Binder.
     public class LocalBinder extends Binder {
-        ForegroundService getService() {
-            return ForegroundService.this;
+        BluetoothFGService getService() {
+            return BluetoothFGService.this;
         }
     }
 
-    public void setCallbacks(ServiceCallbacks callbacks) {
-        serviceCallbacks = callbacks;
+    public void setCallbacks(BluetoothFGServiceCallbacks callbacks) {
+        bluetoothFGServiceCallbacks = callbacks;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         btAdapter = btManager.getAdapter();
     }
 
@@ -79,7 +75,7 @@ public class ForegroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String input = intent.getStringExtra("inputExtra");
-        mac = intent.getStringExtra(MainActivity.MAC_ADDR_PARAM);
+        String mac = intent.getStringExtra(MainActivity.MAC_ADDR_PARAM);
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -142,7 +138,7 @@ public class ForegroundService extends Service {
 
     private void activity() {
 
-        int reqBat = serviceCallbacks != null ? serviceCallbacks.getSelectedChargeLevel() : requiredBatteryLevel;
+        int reqBat = bluetoothFGServiceCallbacks != null ? bluetoothFGServiceCallbacks.getSelectedChargeLevel() : requiredBatteryLevel;
         int batLevel = getCurrentBatteryLevel();
         System.out.println("current bat level " + batLevel + " charging status " + chargingStatus);
         if(!chargingStatus && batLevel <= (reqBat - 2)) {
@@ -205,16 +201,16 @@ public class ForegroundService extends Service {
                 case 2:
                     deviceConnected = true;
                     bluetoothGatt.discoverServices();
-                    if(serviceCallbacks != null) {
-                        serviceCallbacks.updateStatus("Connected");
-                        serviceCallbacks.updateConnectionStatus(false);
+                    if(bluetoothFGServiceCallbacks != null) {
+                        bluetoothFGServiceCallbacks.updateStatus(getString(R.string.connected));
+                        bluetoothFGServiceCallbacks.updateConnectionStatus(false);
                     }
                     break;
                 default:
                     deviceConnected = false;
-                    if(serviceCallbacks != null) {
-                        serviceCallbacks.updateStatus("BLE connection Problem");
-                        serviceCallbacks.updateConnectionStatus(false);
+                    if(bluetoothFGServiceCallbacks != null) {
+                        bluetoothFGServiceCallbacks.updateStatus(getString(R.string.conn_problem, newState));
+                        bluetoothFGServiceCallbacks.updateConnectionStatus(false);
                     }
                     break;
             }

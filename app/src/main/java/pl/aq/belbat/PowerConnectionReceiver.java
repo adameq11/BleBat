@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity;
 public class PowerConnectionReceiver extends BroadcastReceiver {
 
     MainActivity mainActivity = null;
-
     public PowerConnectionReceiver(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
     }
@@ -20,9 +19,7 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if(mainActivity != null) {
             mainActivity.updateBatteryTxt(getBatteryLevel(intent), getBatteryStatus(intent));
-        } /*else if(service != null) {
-            service.setCurrentBatteryLevel(getBatteryLevel(intent));
-        }*/
+        }
     }
 
     public static int getBatteryLevel(Intent batteryStatus) {
@@ -32,7 +29,7 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
             batteryLevel = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, batteryLevel);
             batteryScale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, batteryScale);
         }
-        return new Float(batteryLevel / (float) batteryScale * 100).intValue();
+        return Float.valueOf(batteryLevel / (float) batteryScale * 100).intValue();
     }
 
     private String getBatteryStatus(Intent batteryStatus) {
