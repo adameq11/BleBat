@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BleBat</string>
+    <string name="app_name">BatteryGuard</string>
     <string name="disconnect">Disconnect</string>
     <string name="connect">Connect</string>
     <string name="scanning_started">Scanning started...</string>
