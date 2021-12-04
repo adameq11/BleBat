@@ -69,6 +69,7 @@ public class BluetoothFGService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
+        bluetoothGatt.disconnect();
         stopSelf();
     }
 
@@ -99,10 +100,18 @@ public class BluetoothFGService extends Service {
         return START_STICKY;
     }
 
+    @Override
+    public boolean onUnbind(Intent intent) {
+        bluetoothGatt.disconnect();
+        timerHandler.removeCallbacksAndMessages(null);
+        stopSelf();
+        return super.onUnbind(intent);
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        bluetoothGatt.disconnect();
         timerHandler.removeCallbacksAndMessages(null);
     }
 
