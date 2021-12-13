@@ -2,6 +2,7 @@ package pl.aq.belbat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -68,8 +69,8 @@ public class MainActivity extends AppCompatActivity implements BluetoothFGServic
     private EditText maxCharge = null;
     private EditText macAddress = null;
 
-    private Switch travelMode = null;
-    private Switch autoConnMode = null;
+    private SwitchCompat travelMode = null;
+    private SwitchCompat autoConnMode = null;
 
     private final Set<String> itemsOnList = new HashSet<>();
     private final List<Device> uiDevicesList = new ArrayList<>();
