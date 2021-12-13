@@ -1,5 +1,6 @@
 package pl.aq.belbat;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -27,6 +28,8 @@ public class BluetoothFGService extends Service {
     public static final String SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
     public static final String RX_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
     public static final String TX_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+
+    public static final int MINUTES_BEFORE_ALARM = 60;
 
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
     private boolean deviceConnected = false;
@@ -146,29 +149,52 @@ public class BluetoothFGService extends Service {
     };
 
     private void activity() {
+        if(bluetoothFGServiceCallbacks != null && bluetoothFGServiceCallbacks.isTravelModeEnabled()) {
+            long minutesToAlarm = MainActivity.getTimeToNextAlarm((AlarmManager) getBaseContext().getSystemService(Context.ALARM_SERVICE));
+            System.out.println("minutes to alarm: " + minutesToAlarm);
+            if (minutesToAlarm >= 0 && minutesToAlarm < MINUTES_BEFORE_ALARM) {
+                if (!chargingStatus) {
+                    if (enableCharging(true)) {
+                        chargingStatus = true;
+                        System.out.println("start charging because close to alarm.");
+                    }
+                }
+                return;  //check for any other rules is not needed, as we have to have charge on.
+            }
+        }
 
         int reqBat = bluetoothFGServiceCallbacks != null ? bluetoothFGServiceCallbacks.getSelectedChargeLevel() : requiredBatteryLevel;
         int batLevel = getCurrentBatteryLevel();
         System.out.println("current bat level " + batLevel + " charging status " + chargingStatus);
-        if(!chargingStatus && batLevel <= (reqBat - 2)) {
-            if(transferStringToArduinoService(CHARGE_MESSAGE)) {
+        if (!chargingStatus && batLevel <= (reqBat - 2)) {
+            if (enableCharging(true)) {
                 chargingStatus = true;
-                System.out.println("++++ would send "+CHARGE_MESSAGE);
+                System.out.println("++++ would send " + CHARGE_MESSAGE);
             }
-        } else if(chargingStatus && batLevel > reqBat) {
-            if(transferStringToArduinoService(DISCHARGE_MESSAGE)) {
+        } else if (chargingStatus && batLevel > reqBat) {
+            if (enableCharging(false)) {
                 chargingStatus = false;
-                System.out.println("++++ would send "+DISCHARGE_MESSAGE);
+                System.out.println("++++ would send " + DISCHARGE_MESSAGE);
             }
         }
 
+
+
         if(debug) {
             if (count % 2 == 0) {
-                transferStringToArduinoService("" + reqBat);
+                transferStringToArduinoService("5");
             } else {
                 transferStringToArduinoService("6");
             }
             count++;
+        }
+    }
+
+    public boolean enableCharging(boolean enable) {
+        if(enable) {
+            return transferStringToArduinoService(CHARGE_MESSAGE);
+        } else {
+            return transferStringToArduinoService(DISCHARGE_MESSAGE);
         }
     }
 

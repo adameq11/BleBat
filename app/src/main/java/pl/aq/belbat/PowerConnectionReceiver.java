@@ -18,7 +18,7 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if(mainActivity != null) {
-            mainActivity.updateBatteryTxt(getBatteryLevel(intent), getBatteryStatus(intent));
+            mainActivity.updateBatteryTxt(getBatteryLevel(intent), getBatteryTemp(intent), intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN));
         }
     }
 
@@ -32,15 +32,11 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
         return Float.valueOf(batteryLevel / (float) batteryScale * 100).intValue();
     }
 
-    private String getBatteryStatus(Intent batteryStatus) {
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN);
-        switch(status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:
-                return "Charging";
-            case BatteryManager.BATTERY_STATUS_FULL:
-                return "Full";
-            default:
-                return "Discharging";
+    public static float getBatteryTemp(Intent batteryStatus) {
+        int batteryTemp = -1;
+        if (batteryStatus != null) {
+            batteryTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, batteryTemp);
         }
+        return Float.valueOf(batteryTemp) / 10f;
     }
 }

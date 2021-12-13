@@ -5,4 +5,5 @@ public interface BluetoothFGServiceCallbacks {
     void updateConnectionStatus(boolean connectionState);
 
     int getSelectedChargeLevel();
+    boolean isTravelModeEnabled();
 }

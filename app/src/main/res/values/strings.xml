@@ -7,10 +7,15 @@
     <string name="service_disconnected">Service disconnected</string>
     <string name="scan_failed_code">Scanning failed: %1$d</string>
     <string name="scanning_stopped">Scanning stopped.</string>
-    <string name="bat_level">Battery level: %1$d</string>
+    <string name="bat_level">Battery level: %1$d\%% (%2$.1f°C)</string>
     <string name="bat_status">Battery status: %1$s</string>
     <string name="limit_title">Functionality limited</string>
     <string name="limit_text">Since location access has not been granted, this app will not be able to discover Bluetooth devices.</string>
     <string name="connected">Connected</string>
     <string name="conn_problem">BLE connection Problem %1$d</string>
+    <string name="time_to_next_alarm">Time to next alarm: %1$dh %2$dm</string>
+    <string name="no_alarm_set">No alarms set.</string>
+    <string name="charging">Charging</string>
+    <string name="full">Full</string>
+    <string name="discharge">Discharging</string>
 </resources>
