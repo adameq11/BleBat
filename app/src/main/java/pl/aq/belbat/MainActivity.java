@@ -205,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements BluetoothFGServic
         Intent serviceIntent = new Intent(this, BluetoothFGService.class);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-        serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
         serviceIntent.putExtra(MAC_ADDR_PARAM, bluetoothMac);
 
         Context context = getBaseContext();

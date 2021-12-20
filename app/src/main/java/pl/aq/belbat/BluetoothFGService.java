@@ -25,9 +25,9 @@ import java.util.UUID;
 
 public class BluetoothFGService extends Service {
 
-    public static final String SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
-    public static final String RX_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
-    public static final String TX_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+    public static final String SERVICE_UUID = "98454726-61CE-11EC-90D6-0242AC120003";
+    public static final String RX_UUID = "98454AB4-61CE-11EC-90D6-0242AC120003";
+    public static final String TX_UUID = "98454C62-61CE-11EC-90D6-0242AC120003";
 
     public static final int MINUTES_BEFORE_ALARM = 60;
 
@@ -78,20 +78,17 @@ public class BluetoothFGService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String input = intent.getStringExtra("inputExtra");
         String mac = intent.getStringExtra(MainActivity.MAC_ADDR_PARAM);
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Notification notification = new Notification.Builder(this, CHANNEL_ID)
-                .setContentTitle("Foreground Service")
-                .setContentText(input)
-                //.setSmallIcon(R.drawable.)
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(getString(R.string.service_text))
                 .setContentIntent(pendingIntent)
                 .build();
         startForeground(1, notification);
-        //do heavy work on a background thread
 
         System.out.println("mac address received: " + mac);
         BluetoothDevice device = btAdapter.getRemoteDevice(mac);
@@ -99,7 +96,6 @@ public class BluetoothFGService extends Service {
 
         timerHandler.postDelayed(timerRunnable, 10000);
 
-        //stopSelf();
         return START_STICKY;
     }
 
@@ -127,7 +123,7 @@ public class BluetoothFGService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Foreground Service Channel",
+                    getString(R.string.service_name),
                     NotificationManager.IMPORTANCE_DEFAULT
             );
             NotificationManager manager = getSystemService(NotificationManager.class);
@@ -136,7 +132,6 @@ public class BluetoothFGService extends Service {
     }
 
     //bluetooth stuff
-
     int count = 0;
     Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
@@ -212,8 +207,6 @@ public class BluetoothFGService extends Service {
                     bluetoothGatt.writeCharacteristic(characteristic);
                     return true;
                 }
-            } else {
-                System.out.println("---- service jest nullem");
             }
         }
         return false;

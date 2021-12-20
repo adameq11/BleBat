@@ -18,4 +18,6 @@
     <string name="charging">Charging</string>
     <string name="full">Full</string>
     <string name="discharge">Discharging</string>
+    <string name="service_name">BatteryGuard Service</string>
+    <string name="service_text">BatteryGuard Service needs to be awake to take care for your battery</string>
 </resources>
