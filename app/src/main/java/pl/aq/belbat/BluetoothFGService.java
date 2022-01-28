@@ -82,7 +82,7 @@ public class BluetoothFGService extends Service {
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
+                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
         Notification notification = new Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(getString(R.string.service_text))
@@ -231,7 +231,7 @@ public class BluetoothFGService extends Service {
                     bluetoothGatt.discoverServices();
                     if(bluetoothFGServiceCallbacks != null) {
                         bluetoothFGServiceCallbacks.updateStatus(getString(R.string.connected));
-                        bluetoothFGServiceCallbacks.updateConnectionStatus(false);
+                        bluetoothFGServiceCallbacks.updateConnectionStatus(true);
                     }
                     break;
                 default:

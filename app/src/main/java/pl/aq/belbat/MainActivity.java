@@ -396,7 +396,14 @@ public class MainActivity extends AppCompatActivity implements BluetoothFGServic
 
     @Override
     public void updateConnectionStatus(boolean connectionState) {
-
+        MainActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(!connectionState && serviceStarted) {
+                    onConnectClick(null); //kill service in case of any problems with connection
+                }
+            }
+        });
     }
 
     @Override
